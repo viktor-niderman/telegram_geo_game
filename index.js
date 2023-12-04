@@ -49,7 +49,7 @@ bot.on('message', async (msg) => {
 
 const steps = {
   0: async (user, msg) => {
-    if (!user.testLocationPassed || !msg.location) {
+    if (!user.testLocationPassed && !msg.location) {
       await user.askLocation(
         'Давай для начала проверим, что GPS у тебя работает корректно')
       return
