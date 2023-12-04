@@ -1,8 +1,8 @@
+import 'dotenv/config'
 import TelegramBot from 'node-telegram-bot-api'
 import locationsMixin from './locationsMixin.js'
 
-const token = ''
-const bot = new TelegramBot(token, { polling: true });
+const bot = new TelegramBot(process.env.TELEGRAM_API_TOKEN, { polling: true });
 
 let users = {};
 
