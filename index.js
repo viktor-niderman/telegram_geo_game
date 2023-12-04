@@ -49,6 +49,8 @@ const steps = {
       } else {
         await getCurrentLocation(chatId, 'Нет, ты еще далеко');
       }
+    } else {
+      await getCurrentLocation(chatId, 'Пришли мне геолокацию когда ты будешь около клиты');
     }
   }
 }
