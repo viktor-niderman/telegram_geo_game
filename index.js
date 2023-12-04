@@ -13,6 +13,14 @@ class User {
     this.testLocationPassed = false
   }
 
+  goToNextStep = () => {
+    this.currentStep++;
+  }
+
+  passTestLocation = () => {
+    this.testLocationPassed = true;
+  }
+
   askLocation = async (text) => {
     await bot.sendMessage(this.id, text ?? 'Отправь мне свое местоположение', {
       reply_markup: JSON.stringify({
@@ -54,14 +62,14 @@ const steps = {
         'Давай для начала проверим, что GPS у тебя работает корректно')
       return
     }
-    user.testLocationPassed = true
+    user.passTestLocation();
     if (locationsMixin.isClose(locationsMixin.locations.dormitory,
       msg.location, 200)) {
       await user.sendMessage('О, так ты в общаге')
     }
     await user.sendMessage('Отлично, теперь можно начинать')
     await user.askLocation('Теперь твоя задача дойти до клиты')
-    user.currentStep = 1
+    user.goToNextStep();
   },
   1: async (user, msg) => {
     if (!msg.location) {
