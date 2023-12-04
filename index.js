@@ -2,60 +2,63 @@ import 'dotenv/config'
 import TelegramBot from 'node-telegram-bot-api'
 import locationsMixin from './locationsMixin.js'
 
-const bot = new TelegramBot(process.env.TELEGRAM_API_TOKEN, { polling: true });
+const bot = new TelegramBot(process.env.TELEGRAM_API_TOKEN, { polling: true })
 
-let users = {};
+let users = {}
+
+const doCurrentStep = async (chatId, msg) => {
+  const currentStep = users[chatId]?.currentStep ?? 0
+  await steps[currentStep](chatId, msg)
+}
 
 bot.on('message', async (msg) => {
-  const chatId = msg?.chat?.id
-  if (!chatId) {
-    return;
-  }
-
-  await steps[users[chatId]?.currentStep ?? 0](chatId, msg);
+  const chatId = msg.chat.id
+  await doCurrentStep(chatId, msg)
 })
 
 const steps = {
   0: async (chatId, msg) => {
     if (!users[chatId]) {
-      // Самое самое первое сообщение
-      const username = msg?.from?.username ?? 'человек';
-      await bot.sendMessage(chatId, 'Добро пожаловать в игру, ' + username);
+      const username = msg?.from?.username ?? 'человек'
+      await bot.sendMessage(chatId, 'Добро пожаловать в игру, ' + username)
       users[chatId] = {
         username: username,
         currentStep: 0,
       }
-      await getCurrentLocation(chatId, 'Давай для начала проверим, что GPS у тебя работает корректно');
-    } else if (!users[chatId].location && msg.location) {
-      // Если впервые прислал свою локацию
-      users[chatId].location = {
-        latitude: msg.location.latitude,
-        longitude: msg.location.longitude
+      await askLocation(chatId,
+        'Давай для начала проверим, что GPS у тебя работает корректно')
+      return
+    }
+    if (!users[chatId].testLocationPassed && msg.location) {
+      users[chatId].testLocationPassed = true
+      if (locationsMixin.isClose(locationsMixin.locations.dormitory,
+        msg.location, 200)) {
+        await bot.sendMessage(chatId, 'О, так ты в общаге')
       }
-      if (locationsMixin.isClose(locationsMixin.locations.dormitory, msg.location, 200)) {
-        await bot.sendMessage(chatId, 'О, так ты в общаге');
-      }
-      await bot.sendMessage(chatId, 'Отлично, теперь можно начинать');
-      users[chatId].currentStep = 1;
-      await getCurrentLocation(chatId, 'Теперь твоя задача дойти до клиты');
+      await bot.sendMessage(chatId, 'Отлично, теперь можно начинать')
+      await askLocation(chatId, 'Теперь твоя задача дойти до клиты')
+      users[chatId].currentStep = 1
     } else {
-      await getCurrentLocation(chatId);
+      await askLocation(chatId)
     }
   },
   1: async (chatId, msg) => {
-    if (msg.location) {
-      if (locationsMixin.isClose(locationsMixin.locations.klita, msg.location, 300)) {
-        await bot.sendMessage(chatId, 'Молодец!!! На этом тестовая версия заканчивается');
-      } else {
-        await getCurrentLocation(chatId, 'Нет, ты еще далеко');
-      }
-    } else {
-      await getCurrentLocation(chatId, 'Пришли мне геолокацию когда ты будешь около клиты');
+    if (!msg.location) {
+      await askLocation(chatId, 'Пришли мне геолокацию когда ты будешь около клиты')
+      return;
     }
-  }
+    if (!locationsMixin.isClose(locationsMixin.locations.klita, msg.location,
+      300)) {
+      await askLocation(chatId, 'Нет, ты еще далеко')
+    } else {
+      await bot.sendMessage(chatId,
+        'Молодец!!! На этом тестовая версия заканчивается')
+    }
+
+  },
 }
 
-const getCurrentLocation = async (chatId, text = null) => {
+const askLocation = async (chatId, text = null) => {
   await bot.sendMessage(chatId, text ?? 'Отправь мне свое местоположение', {
     reply_markup: JSON.stringify({
       keyboard: [
