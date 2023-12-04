@@ -32,7 +32,7 @@ const steps = {
         latitude: msg.location.latitude,
         longitude: msg.location.longitude
       }
-      if (locationsMixin.isClose(locationsMixin.locations.dormitory, users[chatId].location, 200)) {
+      if (locationsMixin.isClose(locationsMixin.locations.dormitory, msg.location, 200)) {
         await bot.sendMessage(chatId, 'О, так ты в общаге');
       }
       await bot.sendMessage(chatId, 'Отлично, теперь можно начинать');
@@ -44,7 +44,7 @@ const steps = {
   },
   1: async (chatId, msg) => {
     if (msg.location) {
-      if (locationsMixin.isClose(locationsMixin.locations.klita, users[chatId].location, 300)) {
+      if (locationsMixin.isClose(locationsMixin.locations.klita, msg.location, 300)) {
         await bot.sendMessage(chatId, 'Молодец!!! На этом тестовая версия заканчивается');
       } else {
         await getCurrentLocation(chatId, 'Нет, ты еще далеко');
