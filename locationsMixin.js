@@ -1,7 +1,11 @@
 const locationsMixin = {
   dormitory: {
     latitude: 31.255222,
-    longitude: 34.783896
+    longitude: 34.783896,
+  },
+  klita: {
+    latitude: 31.252188,
+    longitude: 34.779400,
   }
 }
 
